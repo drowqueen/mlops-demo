@@ -68,6 +68,33 @@ This script will:
 - Root Mean Squared Error (RMSE) is used as the evaluation metric.
 - Lower RMSE values indicate better model performance.
 
+## Plotting Model Metrics
+
+Visualize model performance with:
+
+- **Predicted vs Actual Scatter Plot:**  
+  Compares predicted prices to actual sale prices. Points near the y=x line indicate good predictions; outliers show errors.
+
+- **Feature Importance Plot:**  
+  Displays which features most influence the model's predictions.
+
+### Usage
+
+1. Run the plotting script:
+
+    ```bash
+    python scripts/plot_metrics.py
+    ```
+
+   This script loads test data and the trained model, then generates the plots.
+
+2. Ensure test split CSVs (`ames_test_features.csv`, `ames_test_targets.csv`) exist in `data/`.
+
+### Utility Functions
+
+Reusable plotting functions are in `utils/plotting.py`
+
+
 ## Next Steps
 
 - Hyperparameter tuning to improve model accuracy
