@@ -35,15 +35,34 @@ X = df[
 ]
 y = df["SalePrice"]
 print(f"Feature matrix shape: {X.shape}, Target vector length: {len(y)}")
-
-
 # Train/test split - splits data into training and testing sets
 print("Splitting dataset into train and test sets...")
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=9999
 )
+
+# Ensure types (convert numpy arrays/lists to DataFrames/Series)
+import pandas as pd
+
+X_train = pd.DataFrame(X_train, columns=X.columns)
+X_test = pd.DataFrame(X_test, columns=X.columns)
+
+y_train = pd.Series(y_train, name="SalePrice")
+y_test = pd.Series(y_test, name="SalePrice")
+
 print(f"Training set size: {X_train.shape[0]} samples")
 print(f"Test set size: {X_test.shape[0]} samples")
+
+# Save the splits to CSV files
+print("Saving train/test splits to CSV files...")
+X_train.to_csv("data/ames_train_features.csv", index=False)
+X_test.to_csv("data/ames_test_features.csv", index=False)
+
+y_train.to_frame().to_csv("data/ames_train_targets.csv", index=False)
+y_test.to_frame().to_csv("data/ames_test_targets.csv", index=False)
+
+print("Train/test splits saved!")
+
 
 # Hyperparameter tuning with RandomizedSearchCV
 print("Starting hyperparameter tuning...")
