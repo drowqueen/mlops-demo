@@ -6,7 +6,7 @@ This project demonstrates a machine learning pipeline to predict house prices us
 
 ### Prerequisites
 
-- Python 3.11 (recommended)
+- Python 3.10+ 
 - pip
 
 ### Setup
@@ -111,7 +111,7 @@ python scripts/plot_metrics.py --model gb (GradientBoosting model)
 ## Running the FastAPI Model Serving App
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.10+
 - All dependencies installed (`pip install -r requirements.txt`)
 - Trained models saved in the `model/` directory (e.g., `rf_model_best.pkl`, `gb_model_best.pkl`)
 
