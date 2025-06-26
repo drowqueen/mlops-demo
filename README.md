@@ -69,6 +69,7 @@ Script location is `scripts/train_model.py` This script will:
 
 
 ```bash
+mkdir -p model
 python scripts/train_model.py --model rf (RandomForest model)
 ```
 or
