@@ -1,6 +1,6 @@
 # Ames Housing Price Prediction
 
-This project demonstrates a machine learning pipeline to predict house prices using the Ames Housing dataset. The model is trained using scikit-learn's RandomForestRegressor and includes data cleaning, feature engineering, model training, and evaluation. `scripts/clean_data.py` generates a number of engineered features derived from the base features and saves them in new columns.
+This project demonstrates a machine learning pipeline to predict house prices using the Ames Housing dataset. The models are trained using scikit-learn's RandomForestRegressor and GradientBoostingRegressor. Scripts include functions for data cleaning, feature engineering, model training and evaluation. `scripts/clean_data.py` generates a number of engineered features derived from the base features and saves them in new columns, deletes the rows lacking critical data and handles boolean conversions.
 
 ## Getting Started
 
@@ -16,52 +16,66 @@ This project demonstrates a machine learning pipeline to predict house prices us
 
 2. Create and activate a virtual environment:
 
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    ```
+```bash
+python -m venv venv
+source venv/bin/activate
+```
 
 3. Install dependencies:
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+```bash
+pip install -r requirements.txt
+```
 
 4. Download Ames housing data set from `https://www.kaggle.com/datasets/prevek18/ames-housing-dataset`
 
 5. Move the downloaded `AmesHousing.csv` into the project's `data/` folder:
-   ```bash
-   mkdir -p data
-   mv ~/Downloads/AmesHousing.csv data/
-    ```
+
+```bash
+mkdir -p data
+mv ~/Downloads/AmesHousing.csv data/
+```
 
 ### Usage
 
 1. **Clean the raw data:**
+Script location is `scripts/clean_data.py` This script will:
+
+- Generate engineered features for predictive model training
+- Delete the rows lacking critical data
+- Handle boolean conversions
 
  If you placed the dataset at the default path (`data/AmesHousing.csv`), just run:
 
-    ```bash
-    python scripts/clean_data.py
-    ```
+```bash
+python scripts/clean_data.py
+```
 
-If your dataset is in a different location or named differently, specify it manually:
+If your dataset is in a different location or named differently, specify it as cli arguments:
 
-    ```bash
-    python scripts/clean_data.py --input path/to/AmesHousing.csv --output path/to/cleaned.csv
-    ```
+```bash
+python scripts/clean_data.py --input path/to/AmesHousing.csv --output path/to/cleaned.csv
+```
 
-2. **Train the model:**
+2. **Train the models:**
 
-    ```bash
-    python scripts/train_model.py
-    ```
+Script location is `scripts/train_model.py` This script will:
 
-This script will:
 - Load the cleaned dataset (`data/ames_cleaned.csv`)
-- Train a RandomForestRegressor
-- Save the trained model to `model/ames_model.pkl`
+- Split the tedt data and trainiung data, saving them under `data/`
+- Train a RandomForestRegressor or GradientBoostingRegressor
+- Save the trained model to `model/gb_model_best.pkl` or `model/rf_model_best.pkl`
 - Evaluate and print the RMSE on the test set
+
+
+```bash
+mkdir -p model
+python scripts/train_model.py --model rf (RandomForest model)
+```
+or
+```bash
+python scripts/train_model.py --model gb (GradientBoosting model)
+```
 
 ### Model Evaluation
 
@@ -82,9 +96,13 @@ Visualize model performance with:
 
 1. Run the plotting script:
 
-    ```bash
-    python scripts/plot_metrics.py
-    ```
+```bash
+python scripts/plot_metrics.py --model rf (RandomForest model)
+```
+or
+```bash
+python scripts/plot_metrics.py --model gb (GradientBoosting model)
+```
 
    This script loads test data and the trained model, then generates the plots.
 
@@ -101,4 +119,3 @@ Reusable plotting functions are in `utils/plotting.py`
 - Add cross-validation for more robust evaluation
 - Explore additional feature engineering
 - Deploy the trained model as a REST API using FastAPI
-
