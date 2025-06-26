@@ -141,8 +141,6 @@ def clean_ames_data(input_path, output_path):
         "Garage Cars",
         "Garage Area",
         "Bedroom AbvGr",
-        "Kitchen Qual",
-        "Neighborhood",
         "Yr Sold",
         "SalePrice",
         "Full Bath",
@@ -177,18 +175,9 @@ def clean_ames_data(input_path, output_path):
             "Garage Cars",
             "Garage Area",
             "Bedroom AbvGr",
-            "Kitchen Qual",
-            "Neighborhood",
             "Yr Sold",
             "SalePrice",
         ]
-    )
-
-    # One-hot encode categorical features
-    df = pd.get_dummies(
-        df,
-        columns=["Kitchen Qual", "Neighborhood"],
-        drop_first=True,
     )
 
     # Convert any boolean dummies to integers (True → 1, False → 0)

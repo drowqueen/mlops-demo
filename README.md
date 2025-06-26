@@ -45,7 +45,7 @@ Script location is `scripts/clean_data.py` This script will:
 - Delete the rows lacking critical data
 - Handle boolean conversions
 
- If you placed the dataset at the default path (`data/AmesHousing.csv`), just run:
+If you placed the dataset at the default path (`data/AmesHousing.csv`), just run:
 
 ```bash
 python scripts/clean_data.py
@@ -87,10 +87,10 @@ python scripts/train_model.py --model gb (GradientBoosting model)
 Visualize model performance with:
 
 - **Predicted vs Actual Scatter Plot:**  
-  Compares predicted prices to actual sale prices. Points near the y=x line indicate good predictions; outliers show errors.
+Compares predicted prices to actual sale prices. Points near the y=x line indicate good predictions; outliers show errors.
 
 - **Feature Importance Plot:**  
-  Displays which features most influence the model's predictions.
+Displays which features most influence the model's predictions.
 
 ### Usage
 
@@ -104,18 +104,90 @@ or
 python scripts/plot_metrics.py --model gb (GradientBoosting model)
 ```
 
-   This script loads test data and the trained model, then generates the plots.
+  This script loads test data and the trained model, then generates the plots.
 
 2. Ensure test split CSVs (`ames_test_features.csv`, `ames_test_targets.csv`) exist in `data/`.
+
+## Running the FastAPI Model Serving App
+
+### Prerequisites
+- Python 3.8+
+- All dependencies installed (`pip install -r requirements.txt`)
+- Trained models saved in the `model/` directory (e.g., `rf_model_best.pkl`, `gb_model_best.pkl`)
+
+1. Start the FastAPI server
+
+```bash
+uvicorn app.main:app --reload
+```
+
+  You should see output similar to:
+
+  ```
+  INFO: Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+  ```
+
+2. Test the health check endpoint
+  Use curl or a browser to check the `/ping` endpoint:
+
+  ```bash
+  curl http://127.0.0.1:8000/ping
+  ```
+
+  Expected response:
+
+  ```json
+  {"ping":"pong"}
+  ```
+
+3. Test the prediction endpoint
+  Send a POST request with JSON body containing features and a `model` key (`"rf"` or `"gb"`):
+  Example command:
+
+  ```bash
+  curl -X POST http://127.0.0.1:8000/predict \
+    -H "Content-Type: application/json" \
+    -d '{
+      "Gr Liv Area": 1500,
+      "Overall Qual": 7,
+      "Garage Cars": 2,
+      "Year Built": 2005,
+      "totalSF": 2500,
+      "qualitySF": 2400,
+      "finishedSF": 2300,
+      "TotalBath": 2.5,
+      "age": 10,
+      "remodeled_age": 5,
+      "has_pool": 0,
+      "has_fireplace": 1,
+      "has_garage": 1,
+      "is_new": 0,
+      "lot_ratio": 0.5,
+      "porch_area": 100,
+      "model": "rf"
+    }'
+  ```
+
+  Expected response example:
+
+  ```json
+  {
+    "predicted_price": 183631.34,
+    "model": "rf"
+  }
+  ```
+
+  To use the Gradient Boosting model, change `"model": "gb"` in the JSON.
 
 ### Utility Functions
 
 Reusable plotting functions are in `utils/plotting.py`
 
-
 ## Next Steps
 
 - Hyperparameter tuning to improve model accuracy
+- Add model versioning metadata
+- Add prediction logging
 - Add cross-validation for more robust evaluation
-- Explore additional feature engineering
-- Deploy the trained model as a REST API using FastAPI
+- Dockerize the FastAPI app
+
