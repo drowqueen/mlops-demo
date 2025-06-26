@@ -1,10 +1,48 @@
 # scripts/train_model.py
+from math import sqrt
 import pandas as pd  # loads and handles tabular data
 import joblib  # saves and loads machine learning models
-from sklearn.ensemble import RandomForestRegressor  # machine learning model
+from sklearn.ensemble import (
+    RandomForestRegressor,
+    GradientBoostingRegressor,
+)  # machine learning models
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.metrics import mean_squared_error  # measures the accuracy of the model
-from math import sqrt
+import argparse
+
+# Parse command line arguments to choose the model to train
+parser = argparse.ArgumentParser(description="Train model with specified algorithm.")
+parser.add_argument(
+    "--model",
+    choices=["rf", "gb"],
+    required=True,
+    help="Choose model to train rf= random forest gb= gradient boosting",
+)
+args = parser.parse_args()
+
+# Determine model and parameters first
+if args.model == "rf":
+    model = RandomForestRegressor(random_state=9999)
+    param_dist = {
+        "n_estimators": [100, 200, 300, 400, 500],
+        "max_depth": [None, 10, 20, 30, 40, 50],
+        "min_samples_split": [2, 5, 10],
+        "min_samples_leaf": [1, 2, 4],
+        "max_features": ["sqrt", "log2", None],
+    }
+    model_name = "rf"
+elif args.model == "gb":
+    model = GradientBoostingRegressor(random_state=9999)
+    param_dist = {
+        "n_estimators": [100, 200, 300, 400, 500],
+        "max_depth": [3, 5, 7, 9],
+        "learning_rate": [0.01, 0.05, 0.1, 0.2],
+        "subsample": [0.6, 0.8, 1.0],
+        "min_samples_split": [2, 5, 10],
+    }
+    model_name = "gb"
+else:
+    raise ValueError(f"Unknown model type: {args.model}")
 
 # Load data
 print("Loading cleaned data...")
@@ -35,6 +73,7 @@ X = df[
 ]
 y = df["SalePrice"]
 print(f"Feature matrix shape: {X.shape}, Target vector length: {len(y)}")
+
 # Train/test split - splits data into training and testing sets
 print("Splitting dataset into train and test sets...")
 X_train, X_test, y_train, y_test = train_test_split(
@@ -42,8 +81,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # Ensure types (convert numpy arrays/lists to DataFrames/Series)
-import pandas as pd
-
 X_train = pd.DataFrame(X_train, columns=X.columns)
 X_test = pd.DataFrame(X_test, columns=X.columns)
 
@@ -55,29 +92,19 @@ print(f"Test set size: {X_test.shape[0]} samples")
 
 # Save the splits to CSV files
 print("Saving train/test splits to CSV files...")
-X_train.to_csv("data/ames_train_features.csv", index=False)
-X_test.to_csv("data/ames_test_features.csv", index=False)
+X_train.to_csv(f"data/{model_name}_train_features.csv", index=False)
+X_test.to_csv(f"data/{model_name}_test_features.csv", index=False)
 
-y_train.to_frame().to_csv("data/ames_train_targets.csv", index=False)
-y_test.to_frame().to_csv("data/ames_test_targets.csv", index=False)
+y_train.to_frame().to_csv(f"data/{model_name}_train_targets.csv", index=False)
+y_test.to_frame().to_csv(f"data/{model_name}_test_targets.csv", index=False)
 
 print("Train/test splits saved!")
 
-
 # Hyperparameter tuning with RandomizedSearchCV
 print("Starting hyperparameter tuning...")
-param_dist = {
-    "n_estimators": [100, 200, 300, 400, 500],
-    "max_depth": [None, 10, 20, 30, 40, 50],
-    "min_samples_split": [2, 5, 10],
-    "min_samples_leaf": [1, 2, 4],
-    "max_features": ["sqrt", "log2", None],  # removed 'auto'
-}
-
-rf = RandomForestRegressor(random_state=9999)
 
 random_search = RandomizedSearchCV(
-    estimator=rf,
+    estimator=model,
     param_distributions=param_dist,
     n_iter=20,
     cv=5,
@@ -96,8 +123,8 @@ best_model = random_search.best_estimator_
 
 # Saves the best model
 print("Saving the best model...")
-joblib.dump(best_model, "model/ames_model_best.pkl")
-print("Best model saved!")
+joblib.dump(best_model, f"model/{model_name}_model_best.pkl")
+print(f"{args.model} best model saved!")
 
 # Evaluates the accuracy of the best model
 y_pred = best_model.predict(X_test)
