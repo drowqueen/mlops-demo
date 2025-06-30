@@ -7,8 +7,8 @@ This project demonstrates a machine learning pipeline to predict house prices us
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
-- [Preparing the data](#preparing-data)
-- [Training the models](#training-models)
+- [Preparing the data](#preparing-the-data)
+- [Training the models](#training-the-models)
 - [Plotting Model Metrics](#plotting-model-metrics)
 - [Running the FastAPI Model Serving App](#running-the-fastapi-model-serving-app)
 - [Feature Engineering Functions in `clean_data.py`](#feature-engineering-functions-in-clean_datapy)
@@ -82,7 +82,7 @@ Script location is `scripts/train_model.py` This script will:
 - Evaluate and print the RMSE on the test set
 
 ### Usage
-
+Run:
   ```
   mkdir -p model
   python scripts/train_model.py --model gb (Gradient Boosting model)
@@ -109,14 +109,14 @@ This script generates visualizations to help evaluate the performance of a train
 
 Run the script with the `--model` argument specifying which model to use:
 
-    ```
-    python scripts/plot_metrics.py --model gb
-    ```
+  ```
+  python scripts/plot_metrics.py --model gb
+  ```
 or
 
-    ```
-    python scripts/plot_metrics.py --model xgb
-    ```
+  ```
+  python scripts/plot_metrics.py --model xgb
+  ```
 
 Make sure the following files exist before running:
 
