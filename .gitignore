@@ -71,13 +71,12 @@ coverage.xml
 *.pkl
 *.joblib
 
-# Data files
+# Data files and models
 data/*.csv
+model/*.json
+model/*.pkl
+model/*.joblib
 
-# Ignore folders you want to keep in git but ignore their contents (if needed)
-# For example, you can keep the empty model/ folder but ignore its contents:
-# model/*
-# !model/.gitkeep
 
 .env
 .tool-versions
