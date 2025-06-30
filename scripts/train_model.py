@@ -9,6 +9,8 @@ from sklearn.ensemble import (
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.metrics import mean_squared_error  # measures the accuracy of the model
 import argparse
+import os, json, re  # basic file & string tools
+from datetime import datetime  # get current date/time
 
 # Parse command line arguments to choose the model to train
 parser = argparse.ArgumentParser(description="Train model with specified algorithm.")
@@ -16,7 +18,7 @@ parser.add_argument(
     "--model",
     choices=["rf", "gb"],
     required=True,
-    help="Choose model to train rf= random forest gb= gradient boosting",
+    help="Choose model to train, rf: random forest gb: gradient boosting",
 )
 args = parser.parse_args()
 
@@ -121,14 +123,79 @@ print(random_search.best_params_)
 
 best_model = random_search.best_estimator_
 
-# Saves the best model
-print("Saving the best model...")
-joblib.dump(best_model, f"model/{model_name}_model_best.pkl")
-print(f"{args.model} best model saved!")
-
-# Evaluates the accuracy of the best model
+# Evaluate the accuracy of the best model
+print("Evaluating the best model on test set...")
 y_pred = best_model.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
 rmse = sqrt(mse)
-print(f"Test RMSE of best model: {rmse}")
+print(f"Test RMSE of best model: {rmse:.2f}")
+
 print("Model evaluation complete!")
+
+
+# === Model Versioning Utilities ===
+def get_next_version(model_type: str, model_dir="model") -> str:
+    """Automatically determines the next semantic version for the model"""
+
+    existing_files = os.listdir(model_dir)
+    versions = []
+    pattern = re.compile(rf"{model_type}_v(\d+)\.(\d+)\.(\d+)\.pkl")
+
+    for fname in existing_files:
+        match = pattern.match(fname)
+        if match:
+            versions.append(tuple(map(int, match.groups())))
+
+    if versions:
+        latest = max(versions)
+        next_version = (latest[0], latest[1], latest[2] + 1)
+    else:
+        next_version = (1, 0, 0)
+
+    return f"{next_version[0]}.{next_version[1]}.{next_version[2]}"
+
+
+# === Save versioned model and metadata ===
+print("Saving versioned model and metadata...")
+os.makedirs("model", exist_ok=True)
+version = get_next_version(model_name)
+model_path = f"model/{model_name}_v{version}.pkl"
+metadata_path = f"model/{model_name}_v{version}.json"
+
+joblib.dump(best_model, model_path)
+
+metadata = {
+    "model_type": (
+        "RandomForestRegressor" if model_name == "rf" else "GradientBoostingRegressor"
+    ),
+    "version": version,
+    "trained_on": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "train_size": len(X_train),
+    "test_size": len(X_test),
+    "test_rmse": round(rmse, 2),
+    "features": list(X.columns),
+    "best_params": random_search.best_params_,
+    "filename": os.path.basename(model_path),
+}
+
+with open(metadata_path, "w") as f:
+    json.dump(metadata, f, indent=2)
+
+print(f"Model saved to {model_path}")
+print(f"Metadata saved to {metadata_path}")
+
+# === Update model registry ===
+registry_path = "model/model_registry.json"
+
+if os.path.exists(registry_path):
+    with open(registry_path, "r") as f:
+        registry = json.load(f)
+else:
+    registry = []
+
+registry.append(metadata)
+
+with open(registry_path, "w") as f:
+    json.dump(registry, f, indent=2)
+
+print(f"Model version {version} registered in model_registry.json")

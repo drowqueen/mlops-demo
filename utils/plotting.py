@@ -23,7 +23,6 @@ def plot_predicted_vs_actual(y_true, y_pred, title="Predicted vs Actual Prices")
     plt.title(title)
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
 
 
 def plot_feature_importance(model, feature_names, title="Feature Importances"):
@@ -46,4 +45,3 @@ def plot_feature_importance(model, feature_names, title="Feature Importances"):
     )
     plt.ylabel("Importance")
     plt.tight_layout()
-    plt.show()
