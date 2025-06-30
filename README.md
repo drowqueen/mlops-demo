@@ -29,25 +29,25 @@ This project demonstrates a machine learning pipeline to predict house prices us
 
 2. Create and activate a virtual environment:
 
-```bash
-python -m venv venv
-source venv/bin/activate
-```
+  ```
+  python -m venv venv
+  source venv/bin/activate
+  ```
 
 3. Install dependencies:
 
-```bash
-pip install -r requirements.txt
-```
+  ```
+  pip install -r requirements.txt
+  ```
 
 4. Download Ames housing data set from `https://www.kaggle.com/datasets/prevek18/ames-housing-dataset`
 
 5. Move the downloaded `AmesHousing.csv` into the project's `data/` folder:
 
-```bash
-mkdir -p data
-mv ~/Downloads/AmesHousing.csv data/
-```
+  ```
+  mkdir -p data
+  mv ~/Downloads/AmesHousing.csv data/
+  ```
 
 ## Preparing the data
 
@@ -61,15 +61,15 @@ Script location is `scripts/clean_data.py` This script will:
 
 If you placed the dataset at the default path (`data/AmesHousing.csv`), just run:
 
-```bash
-python scripts/clean_data.py
-```
+  ```
+  python scripts/clean_data.py
+  ```
 
 If your dataset is in a different location or named differently, specify it as cli arguments:
 
-```bash
-python scripts/clean_data.py --input path/to/AmesHousing.csv --output path/to/cleaned.csv
-```
+  ```
+  python scripts/clean_data.py --input path/to/AmesHousing.csv --output path/to/cleaned.csv
+  ```
 
 ## Training the models
 
@@ -83,14 +83,14 @@ Script location is `scripts/train_model.py` This script will:
 
 ### Usage
 
-```bash
-mkdir -p model
-python scripts/train_model.py --model gb (Gradient Boosting model)
-```
+  ```
+  mkdir -p model
+  python scripts/train_model.py --model gb (Gradient Boosting model)
+  ```
 or
-```bash
-python scripts/train_model.py --model xgb (Extreme Gradient Boosting model)
-```
+  ```
+  python scripts/train_model.py --model xgb (Extreme Gradient Boosting model)
+  ```
 
 ## Plotting Model Metrics
 
@@ -109,12 +109,12 @@ This script generates visualizations to help evaluate the performance of a train
 
 Run the script with the `--model` argument specifying which model to use:
 
-    ```bash
+    ```
     python scripts/plot_metrics.py --model gb
     ```
 or
 
-    ```bash
+    ```
     python scripts/plot_metrics.py --model xgb
     ```
 
@@ -137,9 +137,9 @@ This tool helps visually assess model accuracy and interpret feature contributio
 
 1. Start the FastAPI server
 
-```bash
-uvicorn app.main:app --reload
-```
+  ```
+  uvicorn app.main:app --reload
+  ```
 
   You should see output similar to:
 
@@ -150,7 +150,7 @@ uvicorn app.main:app --reload
 2. Test the health check endpoint
   Use curl or a browser to check the `/ping` endpoint:
 
-  ```bash
+  ```
   curl http://127.0.0.1:8000/ping
   ```
 
@@ -164,7 +164,7 @@ uvicorn app.main:app --reload
   Send a POST request with JSON body containing features and a `model` key (`"rf"` or `"gb"`):
   Example command:
 
-  ```bash
+  ```
   curl -X POST http://127.0.0.1:8000/predict \
     -H "Content-Type: application/json" \
     -d '{
