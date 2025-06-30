@@ -72,11 +72,8 @@ coverage.xml
 *.joblib
 
 # Data files and models
-data/*.csv
-model/*.json
-model/*.pkl
-model/*.joblib
-
+data/
+model/
 
 .env
 .tool-versions

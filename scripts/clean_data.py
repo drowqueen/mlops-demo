@@ -1,5 +1,6 @@
 # scripts/clean_data.py
 import pandas as pd
+import numpy as np
 
 
 class AmesDataCleaner:
@@ -89,7 +90,67 @@ class AmesDataCleaner:
         df["porch_area"] = sum([df.get(col, 0) for col in porch_cols])
         return df
 
+    def add_age_buckets(self, df):
+        """
+        Create categorical age buckets for the property age.
+        Buckets example (years):
+            0-10: 'new'
+            11-20: 'recent'
+            21-40: 'mid_age'
+            41-60: 'old'
+            60+: 'very_old'
+        """
+        bins = [0, 10, 20, 40, 60, 200]
+        labels = ["new", "recent", "mid_age", "old", "very_old"]
+        df["age_bucket"] = pd.cut(
+            df["age"], bins=bins, labels=labels, right=True, include_lowest=True
+        )
+        return df
+
+    def add_bed_bath_ratio(self, df):
+        """
+        Ratio of bedrooms to total bathrooms (avoid division by zero)
+        """
+        df["bed_bath_ratio"] = df["Bedroom AbvGr"] / df["TotalBath"].replace(0, 0.1)
+        return df
+
+    def add_total_rooms(self, df):
+        """
+        Total rooms above ground approximation:
+        Bedrooms + bathrooms + kitchen above ground
+        """
+        # We don't have kitchen count, use Bedroom AbvGr + TotalBath + 1 (for kitchen assumed)
+        df["total_rooms"] = df["Bedroom AbvGr"] + df["TotalBath"] + 1
+        return df
+
+    def add_recently_remodeled(self, df):
+        """
+        Binary feature if remodeled in last 5 years before sale
+        """
+        df["recently_remodeled"] = (
+            (df["Year Remod/Add"] >= (df["Yr Sold"] - 5)) & (df["Year Remod/Add"] != 0)
+        ).astype(int)
+        return df
+
+    def add_log_transforms(self, df):
+        """
+        Add log(1 + x) transformed features for skewed numerical columns.
+        """
+        skewed_cols = [
+            "Gr Liv Area",
+            "Lot Area",
+            "totalSF",
+            "finishedSF",
+            "qualitySF",
+            "porch_area",
+        ]
+        for col in skewed_cols:
+            if col in df.columns:
+                df[f"log_{col}"] = (df[col] + 1).apply(np.log)
+        return df
+
     def run(self):
+        """Run all feature engineering steps and combine results."""
         # Run all feature engineering steps and combine results
         df = self.df.copy()
         df = self.add_total_sf(df)
@@ -104,11 +165,16 @@ class AmesDataCleaner:
         df = self.add_is_new(df)
         df = self.add_lot_ratio(df)
         df = self.add_porch_area(df)
-
+        df = self.add_age_buckets(df)
+        df = self.add_bed_bath_ratio(df)
+        df = self.add_total_rooms(df)
+        df = self.add_recently_remodeled(df)
+        df = self.add_log_transforms(df)
         return df
 
 
 def clean_ames_data(input_path, output_path):
+    """Clean and engineer features for the Ames Housing dataset."""
     df = pd.read_csv(input_path)
     print(f"Original data shape: {df.shape}")
 
@@ -161,6 +227,11 @@ def clean_ames_data(input_path, output_path):
     ]
 
     df = df[base_features]
+
+    # Remove houses with extremely low or high SalePrice
+    df = df[(df["SalePrice"] >= 5000) & (df["SalePrice"] <= 500000)]
+    # Remove houses with abnormally large living area (greater than 4000 sqft)
+    df = df[df["Gr Liv Area"] <= 4000]
 
     # Run feature engineering
     cleaner = AmesDataCleaner(df)
