@@ -78,18 +78,18 @@ Script location is `scripts/train_model.py` This script will:
 - Load the cleaned dataset (`data/ames_cleaned.csv`)
 - Split the tedt data and trainiung data, saving them under `data/`
 - Train a RandomForestRegressor or GradientBoostingRegressor
-- Save the trained model to `model/gb_model_best.pkl` or `model/rf_model_best.pkl`
+- Save the trained model to `model/gb_model_best.pkl` or `model/xgb_model_best.pkl`
 - Evaluate and print the RMSE on the test set
 
 ### Usage
 
 ```bash
 mkdir -p model
-python scripts/train_model.py --model rf (RandomForest model)
+python scripts/train_model.py --model gb (Gradient Boosting model)
 ```
 or
 ```bash
-python scripts/train_model.py --model gb (GradientBoosting model)
+python scripts/train_model.py --model xgb (Extreme Gradient Boosting model)
 ```
 
 ## Plotting Model Metrics
@@ -98,7 +98,7 @@ python scripts/train_model.py --model gb (GradientBoosting model)
 
 This script generates visualizations to help evaluate the performance of a trained model on the test dataset. This script will:
 
-- Load the test feature data and target values from CSV files based on the chosen model prefix (`rf` for Random Forest or `gb` for Gradient Boosting).
+- Load the test feature data and target values from CSV files based on the chosen model prefix (`gb` for Gradient Boosting or `xgb` for Extreme Gradient Boosting ).
 - Load the trained model (`.pkl` file) from the `model/` directory.
 - Use the model to generate predictions on the test features.
 - Plot two key visualizations:
@@ -110,19 +110,19 @@ This script generates visualizations to help evaluate the performance of a train
 Run the script with the `--model` argument specifying which model to use:
 
     ```bash
-    python scripts/plot_metrics.py --model rf
+    python scripts/plot_metrics.py --model gb
     ```
 or
 
     ```bash
-    python scripts/plot_metrics.py --model gb
+    python scripts/plot_metrics.py --model xgb
     ```
 
 Make sure the following files exist before running:
 
-- Test features CSV: `data/rf_test_features.csv` or `data/gb_test_features.csv`
-- Test targets CSV: `data/rf_test_targets.csv` or `data/gb_test_targets.csv`
-- Trained model pickle: `model/rf_model_best.pkl` or `model/gb_model_best.pkl`
+- Test features CSV: `data/gb_test_features.csv` or `data/xgb_test_features.csv`
+- Test targets CSV: `data/gb_test_targets.csv` or `data/xgb_test_targets.csv`
+- Trained model pickle: `model/gb_gb*.pkl` or `model/xgb*_model_best*.pkl`
 
 This tool helps visually assess model accuracy and interpret feature contributions.
 
@@ -131,7 +131,7 @@ This tool helps visually assess model accuracy and interpret feature contributio
 ### Prerequisites
 - Python 3.10+
 - All dependencies installed (`pip install -r requirements.txt`)
-- Trained models saved in the `model/` directory (e.g., `rf_model_best.pkl`, `gb_model_best.pkl`)
+- Trained models saved in the `model/` directory as pickle files
 
 ### Usage
 
@@ -184,7 +184,7 @@ uvicorn app.main:app --reload
       "is_new": 0,
       "lot_ratio": 0.5,
       "porch_area": 100,
-      "model": "rf"
+      "model": "gb"
     }'
   ```
 
@@ -193,11 +193,9 @@ uvicorn app.main:app --reload
   ```json
   {
     "predicted_price": 183631.34,
-    "model": "rf"
+    "model": "gb"
   }
   ```
-
-  To use the Gradient Boosting model, change `"model": "gb"` in the JSON.
 
 ## Feature Engineering Functions in `clean_data.py`
 
@@ -217,34 +215,39 @@ This section explains the key feature engineering functions from `scripts/clean_
 | `add_is_new` | Binary feature: 1 if house built within 5 years of sale, else 0. |
 | `add_lot_ratio` | Ratio of lot area to above-ground living area plus one (to avoid division by zero). |
 | `add_porch_area` | Sum of various porch area types (open, enclosed, 3-season, screen). |
+| `add_age_buckets`       | Categorizes property age into buckets: new, recent, mid_age, old, very_old based on years since built.                  |
+| `add_bed_bath_ratio`    | Ratio of bedrooms to total bathrooms, with zero bathrooms replaced by 0.1 to avoid division by zero.                    |
+| `add_total_rooms`       | Approximate total rooms above ground: bedrooms + bathrooms + 1 (for kitchen assumed).                                  |
+| `add_recently_remodeled`| Binary feature indicating if the property was remodeled within 5 years before sale.                                     |
+| `add_log_transforms`    | Log-transform (`log(1 + x)`) skewed numeric features like living area, lot area, total SF, porch area, etc.             |
+
 
 These engineered features capture important property characteristics beyond raw input columns, improving model predictive power.
-
----
 
 ## Hyperparameter Sets in `train_model.py`
 
 The hyperparameters control how the models are trained and tuned during `RandomizedSearchCV`.
 
-| Parameter | RandomForestRegressor (`rf`) | GradientBoostingRegressor (`gb`) | Description |
-| --------- | ---------------------------- | -------------------------------- | ----------- |
-| `n_estimators` | [100, 200, 300, 400, 500] | [100, 200, 300, 400, 500] | Number of trees in the ensemble; more trees often improve performance but increase training time. |
-| `max_depth` | [None, 10, 20, 30, 40, 50] | [3, 5, 7, 9] | Maximum depth of each tree; controls model complexity and overfitting risk. |
-| `min_samples_split` | [2, 5, 10] | [2, 5, 10] | Minimum number of samples required to split a node; higher values prevent overfitting. |
-| `min_samples_leaf` | [1, 2, 4] | *Not used* | Minimum samples per leaf node (only in RF); affects model smoothness. |
-| `max_features` | ["sqrt", "log2", None] | *Not used* | Number of features to consider when looking for best split (only in RF); controls randomness. |
-| `learning_rate` | *Not used* | [0.01, 0.05, 0.1, 0.2] | Step size shrinkage for updating trees; lower values require more trees but can improve accuracy. |
-| `subsample` | *Not used* | [0.6, 0.8, 1.0] | Fraction of samples used per tree (stochastic gradient boosting); can reduce overfitting. |
+| Parameter         | GradientBoostingRegressor (`gb`)              | XGBRegressor (`xgb`)                                                   | Description                                                                                     |
+| ----------------- | --------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `n_estimators`    | [300, 400, 500, 600]                          | [200, 300, 400]                                                       | Number of trees (boosting rounds); more trees can improve performance but increase training time.|
+| `max_depth`       | [3, 4, 5, 6]                                  | [4, 5, 6, 7]                                                         | Maximum tree depth; controls model complexity and overfitting risk.                             |
+| `learning_rate`   | [0.03, 0.05, 0.07, 0.1]                       | [0.01, 0.03, 0.05, 0.1]                                             | Step size shrinkage for updating trees; smaller values require more trees but can improve accuracy.|
+| `subsample`       | [0.6, 0.7, 0.85]                              | [0.6, 0.7, 0.85, 1.0]                                               | Fraction of samples used per tree; helps reduce overfitting.                                    |
+| `min_samples_split` | [3, 5, 10]                                   | *Not used*                                                          | Minimum number of samples required to split an internal node (GB only).                         |
+| `min_samples_leaf` | [1, 2, 4]                                     | *Not used*                                                          | Minimum samples per leaf node (GB only); affects smoothness of the model.                       |
+| `max_features`    | ["sqrt", "log2"]                              | *Not used*                                                          | Number of features considered for splits (GB only); controls randomness and diversity.          |
+| `colsample_bytree`| *Not used*                                    | [0.6, 0.7, 0.85, 1.0]                                               | Fraction of features used per tree (XGB only); controls feature sampling.                        |
+| `min_child_weight`| *Not used*                                    | [1, 3, 5]                                                           | Minimum sum of instance weight (hessian) needed in a child (XGB only); controls complexity.     |
 
 The `RandomizedSearchCV` tries random combinations from these ranges to find the best-performing model.
 
----
 
 ## Main Functions in `train_model.py`
 
 This script automates the workflow of training and evaluating either a Random Forest or Gradient Boosting model.
 
-- **Argument parsing:** User selects model type (`rf` or `gb`) via command line.
+- **Argument parsing:** User selects model type (`gb` or `xgb`) via command line.
 - **Data loading:** Loads cleaned data CSV.
 - **Feature/target selection:** Selects predefined features and target variable (`SalePrice`).
 - **Train/test split:** Splits data randomly into training (80%) and testing (20%) sets.
@@ -259,7 +262,5 @@ This modular approach ensures reproducible training and easy tracking of model i
 
 ## Planned features
 
-- Hyperparameter tuning to improve model accuracy
-- Add prediction logging
-- Add cross-validation for more robust evaluation
 - Dockerize the FastAPI app
+- Make plotting accessible from an API endpoint
