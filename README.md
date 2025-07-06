@@ -77,7 +77,7 @@ Script location is `scripts/train_model.py` This script will:
 
 - Load the cleaned dataset (`data/ames_cleaned.csv`)
 - Split the tedt data and trainiung data, saving them under `data/`
-- Train a RandomForestRegressor or GradientBoostingRegressor
+- Train a GradientBoostingRegressor or ExtremeGradientBoosting model
 - Save the trained model to `model/gb_model_best.pkl` or `model/xgb_model_best.pkl`
 - Evaluate and print the RMSE on the test set
 
@@ -245,7 +245,7 @@ The `RandomizedSearchCV` tries random combinations from these ranges to find the
 
 ## Main Functions in `train_model.py`
 
-This script automates the workflow of training and evaluating either a Random Forest or Gradient Boosting model.
+This script automates the workflow of training and evaluating ar Gradient Boosting or Extreme Gradient Boosting model.
 
 - **Argument parsing:** User selects model type (`gb` or `xgb`) via command line.
 - **Data loading:** Loads cleaned data CSV.
