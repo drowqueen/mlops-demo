@@ -76,7 +76,7 @@ If your dataset is in a different location or named differently, specify it as c
 Script location is `scripts/train_model.py` This script will:
 
 - Load the cleaned dataset (`data/ames_cleaned.csv`)
-- Split the tedt data and trainiung data, saving them under `data/`
+- Split the test data and training data, saving them under `data/`
 - Train a GradientBoostingRegressor or ExtremeGradientBoosting model
 - Save the trained model to `model/gb_model_best.pkl` or `model/xgb_model_best.pkl`
 - Evaluate and print the RMSE on the test set
